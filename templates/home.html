@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="hero-section" {% if settings.home_background_image %}style="background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('{{ settings.home_background_image.url }}');"{% endif %}>
+    <div class="hero-content">
+        <h1 class="hero-title slide-up">Make a Difference Today</h1>
+        <p class="hero-subtitle fade-in">{{ settings.mission_statement }}</p>
+        <div class="hero-buttons fade-in-delayed" style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+            <a href="{% url 'donate' %}" class="btn-primary btn-large">Donate Now</a>
+            <a href="{% url 'volunteer' %}" class="btn-secondary btn-large">Become a Volunteer</a>
+            <a href="#stories-section" class="btn-primary btn-large">Read Our Stories</a>
+            <button onclick="openComplaintModal()" class="btn-secondary btn-large" style="background-color: #e74c3c;">File a Complaint</button>
+        </div>
+    </div>
+</section>
+
+<section class="featured-campaigns container">
+    <h2 class="section-title">Our Featured Campaigns</h2>
+    <div class="campaign-grid">
+        {% for campaign in campaigns %}
+        <div class="campaign-card">
+            {% if campaign.image %}
+            <div class="campaign-image" style="background-image: url('{{ campaign.image.url }}');"></div>
+            {% else %}
+            <div class="campaign-image default-bg"></div>
+            {% endif %}
+            <div class="campaign-body">
+                <h3>{{ campaign.title }}</h3>
+                <p>{{ campaign.description|truncatewords:15 }}</p>
+                <div class="progress-container">
+                    {% widthratio campaign.raised_amount campaign.goal_amount 100 as percentage %}
+                    <div class="progress-bar" style="width: {{ percentage|default:0 }}%;"></div>
+                </div>
+                <div class="campaign-stats">
+                    <span>Raised: ${{ campaign.raised_amount }}</span>
+                    <span>Goal: ${{ campaign.goal_amount }}</span>
+                </div>
+                <a href="{% url 'donate' %}?campaign={{ campaign.id }}" class="btn-primary">Support</a>
+            </div>
+        </div>
+        {% empty %}
+        <p>No featured campaigns at the moment.</p>
+        {% endfor %}
+    </div>
+</section>
+
+<section id="stories-section" class="featured-campaigns container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h2 class="section-title" style="margin-bottom: 0;">Inspiring Stories</h2>
+        <div class="translator-controls">
+            <button onclick="translateStories('hi')" class="btn-primary" id="btn-hi">Translate to Hindi</button>
+            <button onclick="translateStories('en')" class="btn-secondary" id="btn-en" style="display: none;">Translate to English</button>
+            <span id="translator-status" style="margin-left: 10px; color: var(--text-secondary); font-size: 0.9rem; display: none;">Translating...</span>
+        </div>
+    </div>
+    
+    <div class="campaign-grid">
+        {% for story in stories %}
+        <div class="campaign-card story-card" data-story-id="{{ story.id }}">
+            {% if story.image %}
+            <div class="campaign-image" style="background-image: url('{{ story.image.url }}');"></div>
+            {% else %}
+            <div class="campaign-image default-bg"></div>
+            {% endif %}
+            <div class="campaign-body">
+                <h3 class="translatable-text" data-original="{{ story.title }}">{{ story.title }}</h3>
+                <div class="story-content-wrapper">
+                    <p class="translatable-text story-content" data-original="{{ story.content }}">{{ story.content|linebreaksbr }}</p>
+                </div>
+                <a href="{% url 'story_detail' story.id %}" class="read-more-btn text-primary" style="font-weight: 600; text-decoration: none; display: inline-block; margin-top: 0.5rem;">Read More &rarr;</a>
+                <small class="text-secondary" style="display: block; margin-top: 1rem; color: #888;">Posted: {{ story.created_at|date:"M d, Y" }}</small>
+            </div>
+        </div>
+        {% empty %}
+        <p>No stories posted yet. Check back later!</p>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Complaint Modal -->
+<div id="complaintModal" class="modal-overlay">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeComplaintModal()">&times;</span>
+        <h2 style="margin-bottom: 1.5rem; color: var(--primary-color);">File a Complaint</h2>
+        <form method="POST" enctype="multipart/form-data" action="{% url 'home' %}">
+            {% csrf_token %}
+            <input type="hidden" name="complaint_submit" value="1">
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label for="c_name" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Full Name *</label>
+                <input type="text" id="c_name" name="name" required style="width: 100%; padding: 0.8rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+            </div>
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label for="c_contact" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Contact (Email/Phone) *</label>
+                <input type="text" id="c_contact" name="contact" required style="width: 100%; padding: 0.8rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+            </div>
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label for="c_subject" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Subject *</label>
+                <input type="text" id="c_subject" name="subject" required placeholder="What is the complaint about?" style="width: 100%; padding: 0.8rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+            </div>
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label for="c_details" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Details *</label>
+                <textarea id="c_details" name="details" rows="4" required placeholder="Describe the issue in detail..." style="width: 100%; padding: 0.8rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); resize: vertical;"></textarea>
+            </div>
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label for="c_evidence" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Upload Evidence (Optional)</label>
+                <input type="file" id="c_evidence" name="evidence" style="width: 100%; padding: 0.5rem; border: 1px dashed var(--border-color); border-radius: var(--radius-sm); background: #f9f9f9;">
+                <small style="color: #666; display: block; margin-top: 0.3rem;">Upload screenshots or documents if any.</small>
+            </div>
+            <button type="submit" class="btn-primary" style="width: 100%; padding: 1rem; font-size: 1.1rem;">Submit Complaint</button>
+        </form>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script>
+    // Modal Logic
+    function openComplaintModal() {
+        document.getElementById('complaintModal').style.display = 'flex';
+    }
+    
+    function closeComplaintModal() {
+        document.getElementById('complaintModal').style.display = 'none';
+    }
+    
+    // Close modal if clicked outside
+    window.onclick = function(event) {
+        var modal = document.getElementById('complaintModal');
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    }
+
+    async function translateStories(targetLang) {
+        const sourceLang = targetLang === 'hi' ? 'en' : 'hi';
+        const elements = document.querySelectorAll('.translatable-text');
+        const statusSpan = document.getElementById('translator-status');
+        
+        document.getElementById('btn-hi').style.display = targetLang === 'hi' ? 'none' : 'inline-block';
+        document.getElementById('btn-en').style.display = targetLang === 'en' ? 'none' : 'inline-block';
+        statusSpan.style.display = 'inline-block';
+        statusSpan.textContent = 'Translating...';
+
+        try {
+            for (let el of elements) {
+                // If translating back to original, just restore it quickly
+                if (targetLang === 'en' && el.hasAttribute('data-original')) {
+                    el.innerHTML = el.getAttribute('data-original');
+                    continue;
+                }
+                
+                const textToTranslate = el.innerText;
+                if (!textToTranslate.trim()) continue;
+
+                // Using free translation API (MyMemory). Note: limit 500 words/day for free without key.
+                const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(textToTranslate)}&langpair=${sourceLang}|${targetLang}`;
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.responseData && data.responseData.translatedText) {
+                    el.innerHTML = data.responseData.translatedText;
+                }
+            }
+            statusSpan.textContent = 'Translated Successfully!';
+            setTimeout(() => { statusSpan.style.display = 'none'; }, 2000);
+        } catch (error) {
+            console.error('Translation error:', error);
+            statusSpan.textContent = 'Translation failed.';
+        }
+    }
+</script>
+{% endblock %}

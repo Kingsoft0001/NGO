@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Our Campaigns - {{ settings.name }}{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Our Campaigns</h1>
+</section>
+
+<section class="container">
+    <div class="campaign-grid">
+        {% for campaign in campaigns %}
+        <div class="campaign-card">
+            {% if campaign.image %}
+            <div class="campaign-image" style="background-image: url('{{ campaign.image.url }}');"></div>
+            {% else %}
+            <div class="campaign-image default-bg"></div>
+            {% endif %}
+            <div class="campaign-body">
+                <h3>{{ campaign.title }}</h3>
+                <p>{{ campaign.description }}</p>
+                <div class="progress-container">
+                    {% widthratio campaign.raised_amount campaign.goal_amount 100 as percentage %}
+                    <div class="progress-bar" style="width: {{ percentage|default:0 }}%;"></div>
+                </div>
+                <div class="campaign-stats">
+                    <span>Raised: ${{ campaign.raised_amount }}</span>
+                    <span>Goal: ${{ campaign.goal_amount }}</span>
+                </div>
+                <a href="{% url 'donate' %}?campaign={{ campaign.id }}" class="btn-primary">Support this Campaign</a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <h2>No active campaigns right now.</h2>
+            <p>Check back later for updates on our ongoing projects.</p>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

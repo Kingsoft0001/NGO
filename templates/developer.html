@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Developer Info - {{ settings.name }}{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>About the Developer</h1>
+</section>
+
+<section class="container developer-section">
+    <div class="developer-card">
+        <div class="developer-avatar">
+            {% if profile and profile.profile_picture %}
+                <img src="{{ profile.profile_picture.url }}" alt="{{ developer_name }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+            {% else %}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+            {% endif %}
+        </div>
+        <h2>{{ developer_name }}</h2>
+        <p class="role">{% if profile and profile.role %}{{ profile.role }}{% else %}Lead Developer & Maintainer{% endif %}</p>
+        <div class="developer-details expanded-details">
+            {% if profile %}
+            <div class="detail-item">
+                <span class="detail-label">Project Contribution</span>
+                <span class="detail-value">{{ profile.contribution|default:"Website design, frontend, backend, database, deployment" }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Technologies</span>
+                <span class="detail-value">{{ profile.technologies|default:"HTML, CSS, JavaScript, Python/Django, SQLite" }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Key Features Developed</span>
+                <span class="detail-value">{{ profile.features_developed|default:"Dynamic Content Management, Admin Panel Integration" }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Security & Performance</span>
+                <span class="detail-value">{{ profile.security_performance|default:"CSRF Protection, XSS/SQL Injection Prevention" }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Purpose of the Project</span>
+                <span class="detail-value">{{ profile.purpose_of_project|default:"To provide a premium platform for the NGO." }}</span>
+            </div>
+            {% if profile.github_link %}
+            <div class="detail-item">
+                <span class="detail-label">GitHub / Portfolio</span>
+                <span class="detail-value"><a href="{{ profile.github_link }}" target="_blank">{{ profile.github_link }}</a></span>
+            </div>
+            {% endif %}
+            <div class="detail-item">
+                <span class="detail-label">Contact Information</span>
+                <span class="detail-value">
+                    <a href="mailto:{{ settings.contact_email }}">{{ settings.contact_email }}</a> <br>
+                    {% if profile.phone_number %}
+                    <a href="tel:{{ profile.phone_number }}">{{ profile.phone_number }}</a>
+                    {% else %}
+                    <a href="tel:{{ settings.contact_phone }}">{{ settings.contact_phone }}</a>
+                    {% endif %}
+                </span>
+            </div>
+            {% else %}
+            <p>Developer profile details are not set up yet.</p>
+            {% endif %}
+        </div>
+        <div class="developer-contact">
+            <a href="mailto:{{ settings.contact_email }}" class="btn-primary">Contact Developer</a>
+        </div>
+    </div>
+</section>
+{% endblock %}
